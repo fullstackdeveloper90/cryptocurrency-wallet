@@ -1,0 +1,196 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-signup">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+
+      }
+
+      .card {
+        width: 40%;
+        margin: auto;
+      }
+
+      @media (max-width: 1024px) {
+        .card {
+          width: 60%;
+        }
+      }
+
+      .save-session {
+        margin-top: 30px;
+        margin-bottom: 30px;
+      }
+
+      paper-button:not([disabled]) {
+        background: #03a9f4;
+        color: white;
+      }
+
+      paper-button {
+        display: inline-block;
+        width: 45%;
+        text-align: center;
+      }
+
+      :host([disabled]) {
+        background: #eaeaea;
+        color: #a8a8a8;
+        cursor: auto;
+        pointer-events: none;
+      }
+
+      .button-area {
+        margin: auto;
+        margin-top: 20px;
+        width: 100%;
+        text-align: center;
+      }
+
+      #toast {
+        --paper-toast-background-color: red;
+        --paper-toast-color: white;
+      }
+    </style>
+
+    <iron-ajax
+      id="signupSubmit" 
+      method="POST" 
+      url="/register" 
+      body='{"email":"[[email]]", "firstname":"[[firstname]]", "lastname": "[[lastname]]", "password": "[[password]]", "phone": "[[phone]]"}' 
+      handle-as="json" 
+      content-type="application/json" 
+      on-response="handleResponse"
+      on-error="serverErrorCb">
+    </iron-ajax>
+
+    <div class="card">
+      <h1>Welcome to signup</h1>
+      <iron-form id="signupForm">
+        <form action="/app" method="get">
+          <paper-input id="email" name="email" label="Email" forcused="true" required auto-validate error-message="Please input your valid email" value="{{email}}"></paper-input>
+          <paper-input id="firstname" name="firstname" label="Fist Name" required auto-validate error-message="Please input your first name" value="{{firstname}}"></paper-input>
+          <paper-input id="lastname" name="lastname" label="Last Name" required auto-validate error-message="Please input your last name" value="{{lastname}}"></paper-input>
+          <paper-input type="password" id="password" name="password" label="Password" required auto-validate error-message="Please input your password" value="{{password}}"></paper-input>
+          <paper-input type="password" id="confirm" name="confirm" label="Confirm Password" required auto-validate error-message="Please retype your password" value="{{confirm}}"></paper-input>
+          <paper-input id="phone" name="phone" label="Phone Number" required auto-validate value="{{phone}}"></paper-input>
+
+          <div class="button-area">
+            <paper-button raised on-tap="register" id="loginSubmit">Register</paper-button>
+          </div>
+        </form>
+        <div class="output"></div>
+      </iron-form>
+    </div>
+    <paper-toast id="toast" class="fit-bottom" text="Failed to singup!"></paper-toast>
+  </template>
+
+  <script>
+    class MySignup extends Polymer.Element {
+      static get is() { return 'my-signup'; }
+
+      static get properties() {
+        return {
+          email: String,
+          firstname: String,
+          lastname: String,
+          password: String,
+          confirm: String,
+          phone: String
+        }
+      }
+
+      register() {
+        if (!this.$.email.validate()) {
+          return;
+        }
+
+        if (!this.$.firstname.validate()) {
+          return;
+        }
+
+        if (!this.$.lastname.validate()) {
+          return;
+        }
+
+        if (!this.$.password.validate()) {
+          return;
+        }
+
+        if (!this.$.confirm.validate()) {
+          return;
+        }
+
+        if (!this.$.phone.validate()) {
+          return;
+        }
+
+        if (this.password !== this.confirm) {
+          this.$.password.invalid = true;
+          this.$.password.errorMessage = "Password dismatcheds";
+          return;
+        } else if (this.password.length < 6) {
+          this.$.password.invalid = true;
+          this.$.password.errorMessage = "The password must be a string with at least 6 characters.";
+        }
+
+        if (this.email.indexOf('@') === -1) {
+          this.$.email.invalid = true;
+          return;
+        }
+
+        if (this.phone.indexOf('+') === -1) {
+          this.$.phone.invalid = true;
+          this.$.phone.errorMessage = "Please input phone number with country code";
+        } else if (this.phone.length < 12) {
+          this.$.phone.invalid = true;
+          this.$.phone.errorMessage = "Please input correct phone number";
+        }
+
+        let request = this.$.signupSubmit.generateRequest();
+        request.completes.then(function(req) {
+            console.log(req);
+            this.email = '';
+            this.firstname = '';
+            this.lastname = '';
+            this.password = '';
+            this.confirm = '';
+            this.phone = '';
+          }, function(rejected) {
+            // failed request, argument is an object
+            let req = rejected.request;
+            let error = rejected.error;
+            console.log(req);
+            console.log(error)
+
+            // this.$.toast.text = error.massage;
+            // this.$.toast.open();
+          }
+        );
+      }
+
+      handleResponse(para) {
+        console.log(para);
+      }
+
+      serverErrorCb(error) {
+        console.log(error);
+        this.$.toast.text = error.message;
+        this.$.toast.open();
+      }
+    }
+
+    window.customElements.define(MySignup.is, MySignup);
+  </script>
+</dom-module>

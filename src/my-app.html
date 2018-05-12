@@ -1,0 +1,316 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../bower_components/paper-menu/paper-submenu.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-menu-button/paper-menu-button.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/bwt-datatable/bwt-datatable.html">
+<link rel="import" href="../bower_components/neon-animation/web-animations.html">
+
+<link rel="import" href="my-icons.html">
+
+<link rel="lazy-import" href="my-dashboard.html">
+<link rel="lazy-import" href="my-view2.html">
+<link rel="lazy-import" href="my-view3.html">
+<link rel="lazy-import" href="my-view404.html">
+
+<dom-module id="my-app">
+  <template>
+    <style>
+      :host {
+        --app-primary-color: #3f51b5;
+        --app-secondary-color: black;
+
+        display: block;
+      }
+
+      app-drawer-layout:not([narrow]) [drawer-toggle] {
+        display: none;
+      }
+
+      app-drawer {
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      app-header {
+        color: #fff;
+        background-color: var(--app-primary-color);
+      }
+
+      app-header paper-icon-button {
+        --paper-icon-button-ink-color: white;
+      }
+
+      .drawer-list {
+        margin: 0 20px;
+      }
+
+      .drawer-list a {
+        display: block;
+        padding: 0 16px;
+        text-decoration: none;
+        color: var(--app-secondary-color);
+        line-height: 45px;
+      }
+
+      .drawer-list a.iron-selected {
+        color: #3F51B5;
+        font-weight: bold;
+        background-color: #c5cae9;
+      }
+
+      iron-icon {
+        margin-right: 33px;
+        opacity: 0.54;
+      }
+
+      .iron-selected {
+        color: var(--default-primary-color);
+      }
+
+      a {
+        text-decoration: none;
+        color: var(--menu-link-color);
+        display: -ms-flexbox;
+        display: -webkit-flex;
+        display: flex;
+        -ms-flex-direction: row;
+        -webkit-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-align: center;
+        -webkit-align-items: center;
+        align-items: center;
+        font-family: 'Roboto', 'Noto', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 24px;
+        min-height: 48px;
+        padding: 0 16px;
+        width: 255px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      a[hide] {
+        display: none;
+      }
+
+      .profile-logo {
+        width: 43px;
+        height: 43px;
+      }
+    </style>
+
+    <app-location
+        route="{{route}}"
+        url-space-regex="^[[rootPath]]">
+    </app-location>
+
+    <app-route
+        route="{{route}}"
+        pattern="[[rootPath]]:page"
+        data="{{routeData}}"
+        tail="{{subroute}}">
+    </app-route>
+
+    <app-drawer-layout fullbleed narrow="{{narrow}}">
+      <!-- Drawer content -->
+      <app-drawer id="drawer" slot="drawer" swipe-open="[[narrow]]">
+        <app-toolbar>Menu</app-toolbar>
+        <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
+          <a name="dashboard" href="[[rootPath]]dashboard">
+            <iron-icon icon="icons:dashboard"></iron-icon>
+            <span>Dashboard</span>
+          </a>
+          <!-- <a name="view2" href="[[rootPath]]view2">
+            <iron-icon icon="icons:all-out"></iron-icon>
+            <span>ICO</span>
+          </a> -->
+          <a name="wallet" href="[[rootPath]]wallet">
+            <iron-icon icon="icons:account-balance-wallet"></iron-icon>
+            <span>Wallet</span>
+          </a>
+          <a name="view3" href="[[rootPath]]view3">
+            <iron-icon icon="icons:find-replace"></iron-icon>
+            <span>Exchanges</span>
+          </a>
+          <a name="view3" href="[[rootPath]]view3">
+            <iron-icon icon="icons:view-list"></iron-icon>
+            <span>Transaction</span>
+          </a>
+          <a name="view3" href="[[rootPath]]view3">
+            <iron-icon icon="icons:settings"></iron-icon>
+            <span>Settings</span>
+          </a>
+          <!-- <a name="view3" href="[[rootPath]]view3">
+            <iron-icon icon="icons:settings-input-antenna"></iron-icon>
+            <span>Affilate</span>
+          </a>
+          <a name="view3" href="[[rootPath]]view3">
+            <iron-icon icon="icons:settings-phone"></iron-icon>
+            <span>Support</span>
+          </a> -->
+        </iron-selector>
+      </app-drawer>
+
+      <!-- Main content -->
+      <app-header-layout has-scrolling-region>
+
+        <app-header slot="header" condenses reveals effects="waterfall">
+          <app-toolbar>
+            <paper-icon-button icon="my-icons:menu" drawer-toggle></paper-icon-button>
+            <div main-title>My Wallet</div>
+
+            <paper-menu-button horizontal-align="right" vertical-offset="45">
+              <!-- <paper-icon-button icon="menu" slot="dropdown-trigger"></paper-icon-button> -->
+              <iron-image class="profile-logo" slot="dropdown-trigger" src="[[photoURL]]" position="center" sizing="cover"></iron-image>
+              <paper-listbox slot="dropdown-content">
+                <paper-item on-tap="goProfile">Profile</paper-item>
+                <paper-item on-tap="logout">LogOut</paper-item>
+              </paper-listbox>
+            </paper-menu-button>
+          </app-toolbar>
+        </app-header>
+
+        <iron-pages
+            selected="[[page]]"
+            attr-for-selected="name"
+            fallback-selection="view404"
+            role="main">
+          <my-dashboard name="dashboard"></my-dashboard>
+          <my-wallet name="wallet"></my-wallet>
+          <my-view3 name="view3"></my-view3>
+          <my-view404 name="view404"></my-view404>
+        </iron-pages>
+      </app-header-layout>
+    </app-drawer-layout>
+  </template>
+
+  <script>
+    class MyApp extends Polymer.Element {
+      static get is() { return 'my-app'; }
+
+      static get properties() {
+        return {
+          page: {
+            type: String,
+            reflectToAttribute: true,
+            observer: '_pageChanged',
+          },
+          routeData: Object,
+          subroute: String,
+          // This shouldn't be neccessary, but the Analyzer isn't picking up
+          // Polymer.Element#rootPath
+          rootPath: String,
+          photoURL: {
+            type: String,
+            notify: true,
+            value: '/images/avatar.png'
+          },
+          displayName: {
+            type: String,
+            notify: true
+          },
+          loggedIn: {
+            type: Boolean,
+            notify: true,
+            value: false
+          }
+        };
+      }
+
+      static get observers() {
+        return [
+          '_routePageChanged(routeData.page)',
+        ];
+      }
+
+      ready() {
+        super.ready();
+
+        let refreshToken = window.localStorage.getItem('refreshToken');
+        if (refreshToken == null || refreshToken == undefined || typeof refreshToken == 'undefined' || refreshToken == '') {
+          window.location.href = '/';
+        }
+
+        this.loggedIn = true;
+
+        let userInfo = window.sessionStorage.getItem('userInfo');
+
+        this.displayName = userInfo.displayName;
+        if (userInfo.photoURL != null && typeof userInfo.photoURL == 'undefined' && userInfo.photoURL == '') {
+          this.photoURL = userInfo.photoURL;
+        }
+      }
+
+      logout() {
+        window.sessionStorage.setItem('userInfo', '');
+        window.localStorage.setItem('refreshToken', '');
+        window.location.href = "/";
+      }
+
+      goProfile() {
+
+      }
+
+      _routePageChanged(page) {
+        // If no page was found in the route data, page will be an empty string.
+        // Default to 'dashboard' in that case.
+        this.page = page || 'dashboard';
+
+        // Close a non-persistent drawer when the page & route are changed.
+        if (!this.$.drawer.persistent) {
+          this.$.drawer.close();
+        }
+      }
+
+      _pageChanged(page) {
+        // Load page import on demand. Show 404 page if fails
+        var resolvedPageUrl = this.resolveUrl('my-' + page + '.html');
+        Polymer.importHref(
+            resolvedPageUrl,
+            null,
+            this._showPage404.bind(this),
+            true);
+      }
+
+      _showPage404() {
+        this.page = 'view404';
+      }
+    }
+
+    window.customElements.define(MyApp.is, MyApp);
+  </script>
+</dom-module>

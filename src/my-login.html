@@ -1,0 +1,160 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/google-recaptcha/google-recaptcha.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/app-storage/app-indexeddb-mirror/app-indexeddb-mirror.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-login">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+
+      }
+
+      .card {
+        width: 40%;
+        margin: auto;
+      }
+
+      @media (max-width: 1024px) {
+        .card {
+          width: 60%;
+        }
+      }
+
+      .save-session {
+        margin-top: 30px;
+        margin-bottom: 30px;
+      }
+
+      paper-button:not([disabled]) {
+        background: #03a9f4;
+        color: white;
+      }
+
+      paper-button {
+        display: inline-block;
+        width: 45%;
+        text-align: center;
+      }
+
+      :host([disabled]) {
+        background: #eaeaea;
+        color: #a8a8a8;
+        cursor: auto;
+        pointer-events: none;
+      }
+
+      .btn-area {
+        width: 100%;
+        text-align: center;
+      }
+    </style>
+
+    <app-indexeddb-mirror
+      session="{{refreshToken}}"
+      key="userInfo"
+      data="{{userInfo}}"
+      persisted-data="{{sessionData}}">
+    </app-indexeddb-mirror>
+
+    <div class="card">
+      <h1>Welcome to login</h1>
+      <iron-form id="loginForm">
+        <form action="/app" method="get">
+          <paper-input id="email" name="email" label="Email" forcused="true" value="{{email}}" required auto-validate error-message="Please input your email"></paper-input>
+          <paper-input type="password" id="password" name="password" label="Password" value="{{password}}" required auto-validate error-message="Please input your password"></paper-input>
+
+          <paper-checkbox class="save-session" name="read" required>Save this session</paper-checkbox><br>
+
+          <!-- <google-recaptcha
+            force-in-body
+            value="{{token}}"
+            sitekey="6LdHISEUAAAAAN0FxtC5OBGQv-zrtj1tQ1Z_KUWf"
+          ></google-recaptcha><br> -->
+
+          <div class="btn-area">
+            <paper-button colorful raised on-tap="login" id="loginBtn">Login</paper-button>
+          </div>
+        </form>
+        <div class="output"></div>
+      </iron-form>
+    </div>
+  </template>
+
+  <script>
+    class MyLogin extends Polymer.Element {
+      static get is() { return 'my-login'; }
+
+      static get properties() {
+        return {
+          email: String,
+          password: String,
+          refreshToken: String,
+          userInfo: {
+            type: Object,
+            notify: true,
+            value: {
+
+            }
+          },
+          sessionData: {
+            type: Object,
+            notify: true,
+            value: {
+
+            }
+          },
+        }
+      }
+
+      login() {
+        if (!this.$.email.validate()) {
+          return;
+        }
+
+        if (!this.$.password.validate()) {
+          return;
+        }
+
+        let host = this;
+
+        firebase.auth().signInWithEmailAndPassword(this.email, this.password).then(function (result) {
+          console.log('token: ', result.refreshToken);
+          host.userInfo.uid = result.uid;
+          host.userInfo.email = result.email;
+          host.userInfo.displayName = result.displayName;
+          host.userInfo.emailVerified = result.emailVerified;
+          host.userInfo.phoneNumber = result.phoneNumber;
+          host.userInfo.photoURL = result.photoURL;
+
+          host.refreshToken = result.refreshToken;
+
+          window.sessionStorage.setItem('userInfo', host.userInfo);
+          window.localStorage.setItem('refreshToken', host.refreshToken);
+
+          window.location.href = '/dashboard';
+        }).catch(function(error) {
+          // Handle Errors here.
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          // ...
+          console.log('error : ', errorMessage);
+        });
+      }
+    }
+
+    window.customElements.define(MyLogin.is, MyLogin);
+  </script>
+</dom-module>

@@ -1,0 +1,221 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/stripe-elements/stripe-card.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-wallet">
+  <template>
+    <style include="shared-styles">
+      :host {
+        --paper-tabs-selection-bar-color: #1A237E;
+        display: block;
+
+        padding: 10px;
+      }
+
+      iron-icon {
+        color: #f8b13d;
+        width: 40px;
+        height: 40px;
+      }
+
+      .deposit-area div {
+        display: inline-block;
+        width: calc(25% - 30px);
+        margin-right: 20px;
+        text-align: center;
+      }
+
+      .stripe-area {
+        margin-top: 40px;
+        text-align: center;
+      }
+
+    </style>
+
+    <iron-ajax
+      id="chargeSubmit" 
+      method="POST" 
+      url="/charge" 
+      body='{"token":"[[token]]", "amount":"[[amount]]", "currency": "[[currency]]", "customer": "[[customer]]"}' 
+      handle-as="json" 
+      content-type="application/json" 
+      on-response="handleResponse"
+      on-error="serverErrorCb">
+    </iron-ajax>
+
+    <div class="card">
+      <div class="circle">3</div>
+      <h1>Deposits</h1>
+      <p>Estimated value of holdings: 0.00 USD</p>
+      <p>From November 29th onward, all BTC/ETH withdrawal transactions would not be processed till the day our ICO ends</p>
+      <hr>
+      <div class="deposit-area">
+        <div >
+          <iron-icon icon="editor:monetization-on"></iron-icon>
+          <span>STRIPE</span>
+        </div>
+        <div>
+          <paper-input id="amount" name="amount" label="Amount" forcused="true" value="{{amount}}" required auto-validate error-message="Please input your deposit"></paper-input>
+        </div>
+        <div>
+          <paper-dropdown-menu id="currency" label="Currency">
+            <paper-listbox slot="dropdown-content" selected="0">
+              <paper-item>USD</paper-item>
+              <paper-item>CAD</paper-item>
+              <paper-item>EUR</paper-item>
+              <paper-item>BTC</paper-item>
+            </paper-listbox>
+          </paper-dropdown-menu>
+        </div>
+        <div>
+          <paper-button raised on-tap="deposit" id="deposit" class="colorful" tapindex="0">Deposit</paper-button>
+        </div>
+      </div>
+      <hr>
+      <!-- <template is="dom-if" if="[[depositshow]]"> -->
+        <div class="stripe-area card" hidden$="[[!depositshow]]">
+          <paper-tabs selected="{{selected}}">
+            <paper-tab active=true>Card</paper-tab>
+            <paper-tab>Bitcoin</paper-tab>
+          </paper-tabs>
+
+          <iron-pages selected="{{selected}}">
+            <div>
+              <stripe-card id="stripe" publishable-key="pk_test_2Cm7SCNwrNi0Y561weuJcQxW" hide-submit=true loading=true token="{{ token }}"></stripe-card>
+              <paper-button raised class="blue ripple" on-tap="deposit_submit" >SUBMIT</paper-button>
+            </div>
+            <div>Page 2</div>
+            <div>Page 3</div>
+          </iron-pages>
+          
+        </div>
+      <!-- </template> -->
+    </div>
+
+    <div class="card">
+      <div slot="toolbar-select-single">
+        <h2>Deposit History</h2>
+      </div>
+      <paper-datatable data="{{histories}}" multi-selection response-width="767px">
+        <paper-datatable-column header="Status" property="status" sortable>
+        </paper-datatable-column>
+        <paper-datatable-column header="DateTime" property="datetime" sortable>
+        </paper-datatable-column>
+        <paper-datatable-column header="Coin Amount" property="coins" sortable>
+        </paper-datatable-column>
+        <paper-datatable-column header="Currency" property="currency" sortable>
+        </paper-datatable-column>
+        <paper-datatable-column header="Amount" property="paid" sortable>
+        </paper-datatable-column>
+      </paper-datatable>
+    </div>
+  </template>
+
+  <script>
+    class MyWallet extends Polymer.Element {
+      static get is() { return 'my-wallet'; }
+
+      static get properties() {
+        return {
+          histories: {
+            type: Array,
+            reflectToAttribute: true,
+            value: [
+              {status: 'Pending', datetime:'2017-12-16 05:23:45', coins:12000, currency: 'USD', paid: '$500'}, 
+              {status: 'Pending', datetime:'2017-12-16 05:23:45', coins:12000, currency: 'USD', paid: '$500'}, 
+              {status: 'Pending', datetime:'2017-12-16 05:23:45', coins:12000, currency: 'USD', paid: '$500'}, 
+              {status: 'Pending', datetime:'2017-12-16 05:23:45', coins:12000, currency: 'USD', paid: '$500'}, 
+              {status: 'Pending', datetime:'2017-12-16 05:23:45', coins:12000, currency: 'USD', paid: '$500'}
+            ]
+          },
+          token: {
+            type: String,
+            notify: true
+          },
+          depositshow: {
+            type: Boolean,
+            notify: true,
+            value: false
+          },
+          amount: {
+            type: Number,
+            notify: true
+          },
+          currency: {
+            type: String,
+            notify: true
+          },
+          customer: {
+            type: String,
+            notify: true
+          }
+        };
+      }
+
+      deposit() {
+        console.log('clicked deposit button.');
+        this.currency = this.$.currency.selectedItemLabel;
+
+        if (!this.$.amount.validate()) {
+          return;
+        }
+
+        if (isNaN(this.amount) === true) {
+          this.$.amount.invalid = true;
+          return;
+        }
+
+        this.depositshow = true;
+      }
+
+      deposit_submit() {
+        let host = this;
+        this.$.stripe.createToken().then(function (result) {
+          console.log(result);
+          host.customer = result.card.id;
+          host.token = result.id;
+
+          let request = host.$.chargeSubmit.generateRequest();
+          request.completes.then(function(req) {
+            console.log(req);
+            host.amount = '';
+            host.$.stripe.reset();
+            host.depositshow = false;
+
+          }, function(rejected) {
+            // failed request, argument is an object
+            let req = rejected.request;
+            let error = rejected.error;
+            console.log(req);
+            console.log(error)
+
+            // this.$.toast.text = error.massage;
+            // this.$.toast.open();
+          });
+        }).catch((error) => {
+          console.log(error);
+        });
+      }
+
+      handleResponse(para) {
+        console.log(para);
+      }
+
+      serverErrorCb(error) {
+        console.log(error);
+      }
+    }
+
+    window.customElements.define(MyWallet.is, MyWallet);
+  </script>
+</dom-module>

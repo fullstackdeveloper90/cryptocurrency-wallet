@@ -1,0 +1,31 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../bower_components/paper-menu/paper-submenu.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-menu>
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <paper-menu>
+      <paper-item>Inbox</paper-item>
+      <paper-item>Starred</paper-item>
+      <paper-item>Sent mail</paper-item>
+      <paper-item>Drafts</paper-item>
+    </paper-menu>
+  </template>
+
+  <script>
+    class MyMenu extends Polymer.Element {
+      static get is() { return 'my-menu'; }
+    }
+
+    window.customElements.define(MyMenu.is, MyMenu);
+  </script>
+</dom-module>
